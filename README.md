@@ -4,11 +4,7 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
-This branch is a refactor to:
-- Clean up UI using `bs4Dash` 
-- Convert plots to `echarts4r` 
-- Fix dependencies: DESCRIPTION and `renv` 
-- Add tests 
+Current developmental version of the UAB ADRC Dashboard
 
 <br>
 
