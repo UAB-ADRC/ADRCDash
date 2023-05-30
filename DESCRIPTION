@@ -1,0 +1,52 @@
+Package: ADRCDash
+Title: ADRC Dashboard
+Version: 0.0.1
+Authors@R: c(
+  person('Chad', 'Murchison', email = 'cfmurch@uab.edu', role = c('cre', 'aut')),
+  )
+Description: Dashboard showing core metrics for the University of Alabama at Birmingham Alzheimer's Disease Center.
+License: MIT + file LICENSE
+Imports: 
+    config,
+    golem,
+    shiny,
+    glue (>= 1.6.2),
+    htmltools (>= 0.5.4),
+    lubridate (>= 1.9.1),
+    dplyr (>= 1.1.0),
+    tidyr (>= 1.3.0),
+    shinyWidgets (>= 0.7.6),
+    plotly (>= 4.10.1),
+    ggplot2 (>= 3.4.0),
+    purrr (>= 1.0.1),
+    waiter (>= 0.2.5),
+    gridExtra (>= 2.3),
+    stringi (>= 1.7.12),
+    data.table (>= 1.14.6),
+    reactable (>= 0.4.3),
+    forcats (>= 1.0.0),
+    bs4Dash (>= 2.2.1),
+    echarts4r (>= 0.4.4),
+    magrittr,
+    cli (>= 3.6.0),
+    rlang (>= 1.0.6),
+    tidyselect (>= 1.2.0),
+    RColorBrewer (>= 1.1.3),
+    htmlwidgets (>= 1.6.1),
+    scales (>= 1.2.1),
+    stringr (>= 1.5.0),
+    tibble (>= 3.1.8),
+    ADRCDashHelper (>= 0.0.0.9000),
+    shinybrowser (>= 1.0.0),
+    colorspace (>= 2.1.0)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+URL: https://github.com/UAB-ADRC/ADRCDash
+BugReports: https://github.com/UAB-ADRC/ADRCDash/issues
+Depends: 
+    R (>= 4.2.0)
+Suggests: 
+    testthat (>= 3.1.6)
+Remotes: 
+    github::UAB-ADRC/ADRCDashHelper

@@ -1,0 +1,251 @@
+/*
+see utils_misc_fun.R for color palatte
+*/
+
+p {
+  font-weight: 300;
+}
+
+#sideBarMenu {
+  background: #144B39;
+}
+
+#sideBarMenu .nav-link {
+  color: #fff !important;;
+}
+#sideBarMenu .nav-link.active {
+  background: #007348 !important;
+}
+#sideBarMenu .nav-link.active p {
+  font-weight: 500;
+}
+#sideBarMenu .control-label {
+  color: #fff;
+  font-weight: 500;
+}
+.nav-link.active {
+  background: #007348 !important;
+}
+
+.btn-circle, .btn-circle:hover, .btn-circle:active {
+  background: rbga(79, 79, 79, 1) !important;
+  border: none;
+}
+.btn-circle:hover {
+  filter: brightness(0.9)
+}
+
+footer {
+  padding: 0.6em !important;
+}
+footer > a{
+  color: #a1a1a1;
+}
+footer > a:hover{
+  filter: brightness(70%);
+  color: #a1a1a1 !important;
+}
+
+#controlbar-toggle > i {
+  color: #fff;
+}
+#controlbar-toggle:hover {
+  filter: brightness(0.7)
+}
+#controlbar-toggle:active {
+  filter: brightness(0.5)
+}
+#controlbar-toggle {
+  background: rbga(79, 79, 79, 1);
+  border-radius: 0.3em;
+}
+
+#data-slideover {
+  padding: 1em;
+  -webkit-box-shadow: -10px 0px 50px rgba(74, 74, 74, 0.5);
+  -moz-box-shadow: -10px 0px 50px rgba(74, 74, 74, 0.5);
+  box-shadow: -10px 0px 50px rgba(74, 74, 74, 0.5);
+}
+
+#data-slideover .accordion .card-header a {
+  color: #383838 !important;
+}
+#data-slideover .accordion .card {
+  border: 3px solid #fff;
+  border-radius: 4px;
+}
+
+#data-slideover .accordion .card label {
+  color: #383838 !important;
+}
+
+/* dropdowns in data slideover are cut off without this */
+#data-slideover .card {
+  overflow: visible !important;
+}
+
+.button-path {
+  margin-left: 0.5em;
+  background-color: rbga(79, 79, 79, 1) !important;
+  border: rbga(79, 79, 79, 1) !important;
+  color: #fff !important;
+}
+.button-path:hover {
+  filter: brightness(0.8);
+}
+.button-path:active {
+  filter: brightness(0.6);
+}
+
+.button-reset {
+  float: right;
+  margin-right: 0.5em;
+  background-color: rgba(0, 0, 0, 0);
+  color: #fff;
+  border: 1px solid #fff;
+}
+.button-reset:hover {
+  background-color: rgba(0, 0, 0, 0);
+  color: #fff;
+  filter: opacity(0.6);
+}
+.button-reset:active {
+  filter: opacity(0.3);
+}
+
+.tab-pane > h1 {
+  margin-bottom: 0.7em;
+}
+
+/* timevis gannt charts */
+.vis-range {
+  background: #999fb0;
+  color: #fff;
+  border: 0px;
+  font-size: 0.8em;
+}
+.vis-selected {
+  background: rbga(79, 79, 79, 1) !important;
+}
+.vis-inner {
+  font-weight: 700;
+}
+
+/* remove red borders in gantt chart groups */
+.vis-nested-group {
+  border: none;
+}
+
+/* gantt tooltip */
+.vis-tooltip {
+  background: #031E45 !important;
+  color: white !important;
+  border: 1px solid #fff !important;
+  border-radius: 0.5em !important;
+}
+
+.time-stamp {
+  display: flex; 
+  justify-content: flex-end;
+  margin: 0 1em 0.2em 1em;
+  color: #031E45;
+  text-align: right;
+  font-size: 0.8rem;
+}
+
+/* calendar colors */
+.month.active, .day.active {
+  background-color: rbga(79, 79, 79, 1) !important;
+}
+.datepicker .day.active {
+  background-color: rgba(79, 79, 79, 1) !important;
+}
+
+/* selectize item colors and box shadow */
+.item.active {
+  background: rbga(79, 79, 79, 1) !important;
+}
+.selectize-input.focus {
+  box-shadow: 0px 0px 5px rgba(79, 79, 79, 0.8);
+  border-color: rgba(79, 79, 79, 0.8);
+}
+
+.shiny-input-checkboxgroup > label {
+  margin: 1em 0 1em 0;
+}
+.checkbox span {
+  font-weight: 500;
+}
+
+.tabbable .nav-link {
+  color: black !important;
+}
+.tabbable .nav-link.active {
+  color: #fff !important;
+}
+
+.ReactTable {
+  padding: 1em;
+  border-radius: 0.25em;
+  font-size: 0.85em;
+}
+.card-body .ReactTable {
+  padding: 0;
+}
+.reactable {
+  margin: auto; /* centers table */
+}
+
+.tab-number {
+  display: inline;
+  background: #031E45;
+  color: #fff;
+  border-radius: 3px;
+  padding: 2px 5px 2px 5px;
+  margin-left: 5px;
+  font-size: 0.85rem;
+}
+
+.card-body {
+  margin-bottom: 1em;
+}
+
+/* dropdown */
+.selected.active {
+  background: rgba(79, 79, 79, 1);
+  color: #fff !important;
+}
+.dropdown-item:active {
+  background: #8c8c8c !important;
+  color: #fff !important;
+}
+
+/* home page */
+#landing-page img {
+  width: 900px;
+  max-width: 90%;
+  border-radius: 0.5em;
+}
+#landing-page p {
+  width: 900px;
+  max-width: 90%;
+  margin-top: 2em;
+  font-size: 1.2em;
+}
+
+/* mobile popup warning */
+.modal-footer > .btn {
+  padding: 0.5rem;
+  border: 2px #007348 solid;
+  background: #007348;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.modal-footer > .btn:active {
+  background: #fff;
+  color: #007348;
+  transition-duration: 100ms;
+}
