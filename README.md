@@ -10,11 +10,7 @@ Current developmental version of the UAB ADRC Dashboard
 
 Dashboard showing core metrics for the University of Alabama at Birmingham Alzheimer's Disease Center.
 
-<br>
-<p align="center">
-  <img src="inst/app/www/screenshot.png" width=80%>
-</p>
-<br>
+
 
 ## Directory structure
 
