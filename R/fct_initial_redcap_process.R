@@ -26,8 +26,9 @@ registry_read_in <- function(synth = FALSE, use_spinner = TRUE, dict = redcap_di
   
   #Read in the registry from REDCap
   redcap_token <- Sys.getenv("REDCAP_API_NEW")
-  redcap_conn <- redcapAPI::redcapConnection(url="https://redcap.dom.uab.edu/api/", token=redcap_token)
-  redcap_curr <- redcapAPI::exportRecords(redcap_conn, factors=use_redcap_factors)
+  #redcap_conn <- redcapAPI::redcapConnection(url="https://redcap.dom.uab.edu/api/", token=redcap_token)
+  #redcap_curr <- redcapAPI::exportRecords(redcap_conn, factors=use_redcap_factors)
+  redcap_curr <- REDCapR::redcap_read(redcap_uri = "https://redcap.dom.uab.edu/api/", token = redcap_token)$data
   } else{
     redcap_curr <- redcap_synth
   }
@@ -56,8 +57,9 @@ visit_read_in <- function(token, synth = FALSE, dict = redcap_dict, subtable_dic
   
   #1 - Read in the NACC dataset
   visit_token <- Sys.getenv(token)
-  visit_conn <- redcapAPI::redcapConnection(url="https://redcap.dom.uab.edu/api/", token=visit_token)
-  visit_curr <- redcapAPI::exportRecords(visit_conn, factors = use_redcap_factors)
+  #visit_conn <- redcapAPI::redcapConnection(url="https://redcap.dom.uab.edu/api/", token=visit_token)
+  #visit_curr <- redcapAPI::exportRecords(visit_conn, factors = use_redcap_factors)
+  visit_curr <- REDCapR::redcap_read(redcap_uri = "https://redcap.dom.uab.edu/api/", token = visit_token)$data
   
   #Coerce to data.table for populating
   visit_curr <- data.table::as.data.table(visit_curr)
@@ -423,7 +425,7 @@ make_var_by_date <- function(df, date_thresh, id_col = redcap_dict[["adrc_key"]]
   #We do include a toggle since this may need to by dynamic for visit (e.g. merging pre-P20 into NACC cohort)
   #Also check if the values id_col appears more than once in which case we'll need to populate everything accordingly
   #If this is done, it may need to be updated later i.e. rerun this function
-  if(set_all_dates == TRUE && length(na.omit(df[[id_col]])) > length(unique(df[[id_col]]))){
+  if(set_all_dates == TRUE && length(stats::na.omit(df[[id_col]])) > length(unique(df[[id_col]]))){
     df_temp <- data.frame(id = df[[id_col]], nacc = nacc)
     df_temp$nacc[df_temp$id %in% unique(df_temp$id[df_temp$nacc == 1])] <- 1
     nacc <- df_temp$nacc
@@ -434,10 +436,10 @@ make_var_by_date <- function(df, date_thresh, id_col = redcap_dict[["adrc_key"]]
 }
 
 
-#'5b - The ADRC enrollment date
+#' 5b - The ADRC enrollment date
 #'
-#'Consolidating the adc_preP20_dt and adc_clin_core_dt to get a global ADRC enrollment date
-#'A little contrived but we use a temporary data frame to use data.table and assign by reference
+#' Consolidating the adc_preP20_dt and adc_clin_core_dt to get a global ADRC enrollment date
+#' A little contrived but we use a temporary data frame to use data.table and assign by reference
 #'
 #' @noRd
 #' 
@@ -452,9 +454,9 @@ consolidate_dt <- function(df, dt_fields = c("adc_clin_core_dt", "adc_prep20_dt"
   #Build out the variable
   #Rows are subset
   if(.min == TRUE){
-    df_temp[!is.na(df_temp[[.by]]) & rowSums(is.na(df_temp[,..dt_fields])) < length(dt_fields), dt_out := min(na.omit(sapply(.SD, as.Date))), by = .by, .SDcols = dt_fields]
+    df_temp[!is.na(df_temp[[.by]]) & rowSums(is.na(df_temp[,..dt_fields])) < length(dt_fields), dt_out := min(stats::na.omit(sapply(.SD, as.Date))), by = .by, .SDcols = dt_fields]
   } else{
-    df_temp[!is.na(df_temp[[.by]]) & rowSums(is.na(df_temp[,..dt_fields])) < length(dt_fields), dt_out := max(na.omit(sapply(.SD, as.POSIXct))), by = .by, .SDcols = dt_fields]
+    df_temp[!is.na(df_temp[[.by]]) & rowSums(is.na(df_temp[,..dt_fields])) < length(dt_fields), dt_out := max(stats::na.omit(sapply(.SD, as.POSIXct))), by = .by, .SDcols = dt_fields]
   }
   
   return(df_temp$dt_out)

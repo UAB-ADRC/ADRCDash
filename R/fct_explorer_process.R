@@ -26,6 +26,6 @@ explorer_process <- function(df, study, vis_type, study_restrict, dict = explore
   
   #Slice the dataframe according to the call whether it's been processed or not
   df <- eval(slice_call)
-  
+
   return(df)
 }

@@ -14,11 +14,7 @@
 #' @return dataframe
 make_table_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_type, group_col = "adc_sub_id"){
   
-  
   if(nrow(df) == 0 || is.null(df) || is.null(dim(df))) return(default_table)
-  
-  #Start the spinner
-  # spin_update$show()
   
   #Drop any unused levels in group_curr
   .currs <- c(indvar_curr, depvar_curr, group_curr)
@@ -53,10 +49,14 @@ make_table_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_ty
   
   
   #Call the appropriate table maker function
-  if(depvar_curr=="Count") { tab_explorer <- count_table_maker(df, indvar_curr, group_curr)
-  } else tab_explorer <- covar_table_maker(df, depvar_curr, indvar_curr, group_curr)
+  if(depvar_curr == "Count") { 
+    tab_explorer <- count_table_maker(df, indvar_curr, group_curr)
+  } else {
+    tab_explorer <- covar_table_maker(df, depvar_curr, indvar_curr, group_curr)
+  }
   
-  # spin_update$hide()
+  # make NAs '-'
+  tab_explorer[is.na(tab_explorer)] <- "-"
   
   return(tab_explorer)
 }

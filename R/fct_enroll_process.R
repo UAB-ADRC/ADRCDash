@@ -148,7 +148,7 @@ enroll_loss_check <- function(df, targ_diff = 1365, diff_units = "days", ...){
 #' @return dataframe
 enroll_process_rate <- function(df, start_dt, end_dt, study, date_adjust = TRUE, enroll_field = "enroll",
                                 race_field = "Race", ref_race = "Black / AA",
-                                yr_start = 2018, mo_start = 1, dt_sep = "-"){
+                                yr_start = 2018, mo_start = 1, dt_sep = "-", .break = "4-24"){
   
   ##
   #Initialization processing and reactive date adjustments
@@ -164,26 +164,28 @@ enroll_process_rate <- function(df, start_dt, end_dt, study, date_adjust = TRUE,
   #The major conflict is "Unable to Complete" would be included since they have consenting dates but aren't actually "enrolled"
   df <- df[!is.na(df[[enroll_field]]),]
   
-  #First determine the starting window
-  if(date_adjust == TRUE) {
+  #Determine the specific study's start point and reference field for dates
+  ref_date_field <- study_choices[["date_field"]][which(study_choices[["name"]] == study)]
     
-    #Determine the specific study's start point and reference field for dates
-    ref_date_field <- study_choices[["date_field"]][which(study_choices[["name"]] == study)]
+  #Also identify the starting window
+  if(isTRUE(date_adjust)){
     start_dt <- max(as.Date(start_dt), as.Date(study_choices[["start_dt"]][which(study_choices[["name"]] == study)]))
-    
-    #Making the reference, yr_start and mo_start dates more dynamic with the reactive context
-    ref_date <- start_dt
-    yr_start = lubridate::year(ref_date); mo_start = lubridate::month(ref_date)
-    
-    
-    #Run the filter and build the window
-    df <- start_end_date_filter_alt(df, date_field = ref_date_field, start_date = start_dt, end_date = end_dt, na_filter = TRUE)
-    if(lubridate::year(start_dt) > yr_start){ 
-      yr_start <- lubridate::year(start_dt)
-      mo_start <- lubridate::month(start_dt)
-    } else if(lubridate::month(start_dt) > mo_start) mo_start <- lubridate::month(start_dt)
-    
+  } else{
+    start_dt <- as.Date(start_dt)
   }
+    
+  #Making the reference, yr_start and mo_start dates more dynamic with the reactive context
+  ref_date <- start_dt
+  yr_start = lubridate::year(ref_date); mo_start = lubridate::month(ref_date)
+    
+    
+  #Run the filter and build the window
+  df <- start_end_date_filter_alt(df, date_field = ref_date_field, start_date = start_dt, end_date = end_dt, na_filter = TRUE)
+  if(lubridate::year(start_dt) > yr_start){ 
+    yr_start <- lubridate::year(start_dt)
+    mo_start <- lubridate::month(start_dt)
+  } else if(lubridate::month(start_dt) > mo_start) mo_start <- lubridate::month(start_dt)
+    
   yr_start <- gsub("^..", "", yr_start)
   dt_start <- paste(mo_start, yr_start, sep = dt_sep)
   
@@ -260,8 +262,10 @@ enroll_process_rate <- function(df, start_dt, end_dt, study, date_adjust = TRUE,
   df_plot <- 
     data.table::data.table(dt_plot = factor(dt_levels, levels=dt_levels, labels=dt_levels),
                            count_50 = target_enroll(50, dt_levels),
-                           count_100 = target_enroll(100, dt_levels))
-  
+                           count_105 = target_enroll(105, dt_levels))
+  df_plot$count_p30 <- df_plot$count_105 - df_plot$count_105[df_plot$dt_plot == .break] + df_plot$count_50[df_plot$dt_plot == .break]
+  df_plot$count_p30[as.numeric(df_plot$dt_plot) < as.numeric(which(levels(df_plot$dt_plot) == .break))] <-
+    df_plot$count_50[as.numeric(df_plot$dt_plot) < as.numeric(which(levels(df_plot$dt_plot) == .break))]  
   
   #Use left-join to combine with the df_reduc
   #Use data.table merge in place for both types for efficiency but need to add in count_all and count_race separately

@@ -4,7 +4,7 @@
 #' @noRd
 
 #Data Exploration Choices
-group_choices <- c("AD Syndromal Stage", "Race", "Sex", "Race and Sex")
+group_choices <- c("None", "AD Syndromal Stage", "Race", "Sex", "Race and Sex")
 xvar_choices <- c("AD Numeric Stage", "AD Syndromal Stage", "Global CDR", "Race")
 yvar_choices <- c("Count", "Age", "Education", "Global CDR")
 visit_choices <- c("Baseline", "Most Recent", "Longitudinal")
@@ -51,5 +51,9 @@ default_plot <-
   ggplot2::theme_void()
 
 default_plotly <- plotly::ggplotly(default_plot)
+
+default_echarts <- data.frame(text = 'test', x = 2, y = 2) |> 
+  echarts4r::e_charts(x) |> 
+  echarts4r::e_title(text_default)
 
 default_table <- data.frame(V1 = text_default); colnames(default_table) <- ""

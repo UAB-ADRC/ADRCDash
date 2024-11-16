@@ -10,7 +10,7 @@
 #' @param group_col Grouping column in dataframe. Defaults to 'adc_sub_id'
 #' @param use_echarts TRUE/FALSE
 #' 
-#' @author Chad Murchison, \email{cfmurch@uab.edu}
+#' @author Chad Murchison, Joseph Marlo, \email{support@landeranalytics.com}
 #' @noRd
 #' 
 #' @return echarts or ggplot object
@@ -19,11 +19,7 @@
 #' # See app_server.R
 make_plot_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_type, group_col = "adc_sub_id", use_echarts){
   
-  
-  if(nrow(df) == 0 || is.null(df) || is.null(dim(df))) return(return_default_plot())
-  
-  #Start the spinner
-  # spin_update$show()
+  if(nrow(df) == 0 || is.null(df) || is.null(dim(df))) return(return_default_plot(use_echarts = use_echarts))
 
   ##
   #Initial Processing
@@ -39,7 +35,6 @@ make_plot_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_typ
     depvar_curr <- paste0(depvar_curr, "_dep")
   }
   
-  
   #Change the indvar_plot variable if longitudinal data is being used
   if(vis_type == "Longitudinal"){
     df_dt <- data.table::data.table(df)
@@ -52,6 +47,7 @@ make_plot_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_typ
   #Prep the x-axis and main title
   x_title <- expl_xvar_dict[["axis_name"]][which(expl_xvar_dict[["xvar"]]==indvar_curr)]
   title_curr <- expl_group_dict[["title_curr"]][which(expl_group_dict[["group_var"]]==group_curr)]
+  title_curr <- ifelse(group_curr == indvar_curr, indvar_curr, title_curr)
   
   #Also prep the group colors for fill/color
   fill_length <- max(length(levels(df[[group_curr]])), 3)
@@ -128,29 +124,24 @@ make_plot_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_typ
       indvar_plot <- untick(indvar_plot)
       group_plot <- untick(group_plot)
       
-      if (isTRUE(indvar_plot == group_plot)){
+      if (isTRUE(group_plot == indvar_plot)){
         # create echarts bar plot
-        ec_plot <- plot_explorer_bar_ec(df, indvar_plot, group_plot, title_curr)
+        ec_plot <- plot_explorer_bar_ec(df, indvar_plot, title_curr)
       } else {
         # create grouped echarts bar plot
         ec_plot <- plot_explorer_bar_grouped_ec(df, indvar_plot, group_plot, title_curr)
       }
-      
-      # spin_update$hide()
 
       return(ec_plot)
     }
     
     # -------------------------------------------------------------------------
 
-    plot_explorer <- 
-      ggplot(data=df, aes_string(x = indvar_plot)) + 
+    plot_explorer <- ggplot(data = df, aes_string(x = indvar_plot)) + 
       geom_bar(aes_string(fill = group_plot), position = position_dodge(), color = "black") + 
-      
       scale_fill_manual(values = fill_curr, drop = FALSE) + 
       scale_y_continuous(breaks = breaks_curr, name = y_title) + 
       scale_x_discrete(name = x_title, drop = FALSE) + 
-      
       ggtitle(title_curr) + 
       gg_themes$explorer
   
@@ -264,18 +255,18 @@ make_plot_explorer <- function(df, indvar_curr, depvar_curr, group_curr, vis_typ
 #' @param group_plot Grouping variable
 #' @param title_curr Title of plot
 #' 
-#' @author Chad Murchison, \email{cfmurch@uab.edu}
+#' @author Joseph Marlo, \email{support@landeranalytics.com}
 #' @noRd
 #'
 #' @return echarts
 #' @describeIn plot_explorer_bar_ec Bar chart
-plot_explorer_bar_ec <- function(df, indvar_plot, group_plot, title_curr){
+plot_explorer_bar_ec <- function(df, indvar_plot, title_curr){
   
   # create counts of the data
   counts_for_plot <- df |> 
     dplyr::group_by(!!dplyr::sym(indvar_plot)) |> 
     dplyr::tally()
-  
+
   # create echart
   ec_plot <- counts_for_plot |>
     echarts4r::e_charts_(indvar_plot) |>
@@ -306,6 +297,12 @@ plot_explorer_bar_grouped_ec <- function(df, indvar_plot, group_plot, title_curr
                     !!dplyr::sym(group_plot)) |> 
     dplyr::tally()
   
+  # make implicit missing combinations explicit and fill with 0s
+  counts_for_plot <- counts_for_plot |> 
+    dplyr::ungroup() |> 
+    tidyr::complete(!!dplyr::sym(indvar_plot), !!dplyr::sym(group_plot), fill = list(n = 0))
+    
+  
   # create echart
   ec_plot <- counts_for_plot |>
     dplyr::group_by(!!dplyr::sym(group_plot),
@@ -331,14 +328,32 @@ plot_explorer_bar_grouped_ec <- function(df, indvar_plot, group_plot, title_curr
 #' @noRd
 #' @describeIn plot_explorer_bar_ec Jitter plot
 plot_explorer_jitter_ec <- function(df, indvar_plot, depvar_plot, title_curr){
-  
+
   # create tooltip that shows the mean
   tooltip <- htmlwidgets::JS(
     "function(params){
-              let seriesMean = Math.round(params[1].value[1]*10)/10;
+    
+              // get mean and point values
+              let seriesMean = (Math.round(params[1].value[1]*10)/10).toFixed(1);
+              let value = (Math.round(params[0].value[1]*10)/10).toFixed(1);
+              
+              // get and parse the upper and lower error bar values
+              let errors;
+              try {
+                errors = params[1].data.name.split(',');
+              } catch (e) {
+                errors = ['', ''];
+              }
+              let errorMax = errors[0];
+              let errorMin = errors[1];
+              
+              // finalize string to show to user
               let myLabel = '<strong>' + params[0].seriesName + 
-                            '</strong><br>Mean: ' + seriesMean +
-                            '<br>Value: ' + params[0].value[1]
+                            '</strong><br>+1 SD: ' + errorMax +
+                            '<br>Mean: ' + seriesMean +
+                            '<br>-1 SD: ' + errorMin +
+                            '<br>' +
+                            '<br>Value: ' + value
               return(myLabel)   }"
   )
   
@@ -356,17 +371,50 @@ plot_explorer_jitter_ec <- function(df, indvar_plot, depvar_plot, title_curr){
     )
   )
   
-  # create echart
-  ec_plot <- df |>
+  # prep the scatter data
+  ec_data <- df |>
     dplyr::group_by(!!dplyr::sym(indvar_plot)) |> 
-    dplyr::mutate(mean = mean(!!dplyr::sym(depvar_plot))) |> 
+    dplyr::mutate(
+      mean = mean(!!dplyr::sym(depvar_plot)),
+      error_max = mean + sd(!!dplyr::sym(depvar_plot)),
+      error_min = mean - sd(!!dplyr::sym(depvar_plot)),
+      error_combined = paste0(round(error_max, 1), ",", round(error_min, 1))
+    ) |> 
+    dplyr::select(
+      !!dplyr::sym(indvar_plot), 
+      !!dplyr::sym(depvar_plot), 
+      mean, 
+      jittered_x, 
+      error_max, 
+      error_min,
+      error_combined
+    )
+  
+  # prep data for the error bars
+  ec_error_data <- ec_data |> 
+    dplyr::ungroup() |> 
+    dplyr::distinct(!!dplyr::sym(indvar_plot), error_max, error_min) |> 
+    dplyr::arrange(!!dplyr::sym(indvar_plot)) |> 
+    dplyr::mutate(jittered_x = dplyr::row_number()) |> 
+    tidyr::pivot_longer(c(error_max, error_min)) |> 
+    dplyr::group_by(!!dplyr::sym(indvar_plot))
+  
+  # create echart
+  ec_plot <- ec_data |> 
     echarts4r::e_charts(jittered_x) |> 
-    echarts4r::e_scatter_(depvar_plot, 
-                          symbol_size = 9,
-                          itemStyle = list(opacity = 0.6)) |> 
-    echarts4r::e_line(mean,
-                      symbol = 'none',
-                      lineStyle = list(width = 7)) |> 
+    echarts4r::e_scatter_(
+      depvar_plot,
+      symbol_size = 9,
+      itemStyle = list(opacity = 0.4)
+    ) |>
+    echarts4r::e_line(
+      mean,
+      bind = error_combined, 
+      symbol = 'none',
+      lineStyle = list(width = 7)
+    ) |>
+    echarts4r::e_data(data = ec_error_data) |> 
+    echarts4r::e_line(value, symbol = 'rect') |> 
     echarts4r::e_aria(
       enabled = TRUE, 
       decal = list(show = TRUE)
@@ -393,8 +441,32 @@ plot_explorer_jitter_grouped_ec <- function(df, indvar_plot, depvar_plot, group_
   
   # create new numeric x axis so we can jitter it
   if (!isTRUE(is.factor(df[[indvar_plot]]))) cli::cli_abort('Independent variable must be a factor')
-  df$jittered_x <- jitter(as.numeric(df[[indvar_plot]]))
-  
+  between_subgroup_separation <- 0.15
+  within_group_jitter <- 0.05
+  scale_between <- function(x, min_val = -between_subgroup_separation, max_val = between_subgroup_separation) {
+    x_min <- min(x, na.rm = TRUE)
+    x_max <- max(x, na.rm = TRUE)
+    scaled_x <- min_val + (max_val - min_val) * ((x - x_min) / (x_max - x_min))
+    return(scaled_x)
+  }
+
+  # for each subgroup, shift it within its parent group and apply jitter
+  df <- df |> 
+    dplyr::select(
+      !!dplyr::sym(indvar_plot),
+      !!dplyr::sym(group_plot),
+      !!dplyr::sym(depvar_plot),
+    ) |> 
+    dplyr::mutate(raw_x = as.numeric(!!dplyr::sym(indvar_plot))) |> 
+    dplyr::group_by(!!dplyr::sym(group_plot)) |> 
+    dplyr::mutate(subgroup = dplyr::cur_group_id()) |> 
+    dplyr::group_by(!!dplyr::sym(indvar_plot)) |> 
+    dplyr::mutate(
+      jittered_x = jitter(raw_x + scale_between(subgroup), amount = within_group_jitter)
+    ) |>
+    dplyr::select(-raw_x, -subgroup) |> 
+    dplyr::ungroup()
+
   # create x-axis formatter that turns numerics into labels from the pre-jittered variable
   label_array <- paste0('"', levels(df[[indvar_plot]]), '"', collapse = ', ')
   x_axis_formatter <- htmlwidgets::JS(
@@ -406,31 +478,100 @@ plot_explorer_jitter_grouped_ec <- function(df, indvar_plot, depvar_plot, group_
   )
   
   # tooltip
-  # TODO: this tooltip isn't great
   tooltip <- htmlwidgets::JS(
     "function(params){ tmp = params;
-              let myLabel = '<strong>' + params.seriesName + '</strong><br>' + params.value[1]
-              return(myLabel)   }"
+    
+        function replaceNaN(x) {
+          return isNaN(x) ? '' : x
+        }
+        function calculateMean(arr) {
+          const sum = arr.reduce((acc, val) => acc + val, 0);
+          return sum / arr.length;
+        }
+    
+        let value = (Math.round(params[0].value[1]*10)/10).toFixed(1);
+        let name = params[0].seriesName
+        
+        // get and parse the upper and lower error bar values
+        let errors;
+        try {
+          errors = params[0].data.name.split(',');
+        } catch (e) {
+            errors = ['', ''];
+        }
+        let errorMax = (Math.round(errors[0]*10)/10).toFixed(1);
+        let errorMin = (Math.round(errors[1]*10)/10).toFixed(1);
+        
+        // get the mean; this only works b/c +/- SD is symmetrical
+        let seriesMean = calculateMean([+errorMin, +errorMax])
+        seriesMean = (Math.round(seriesMean*10)/10).toFixed(1);
+        
+        // catch NaN values
+        value = replaceNaN(value)
+        errorMax = replaceNaN(errorMax)
+        errorMin = replaceNaN(errorMin)
+        seriesMean = replaceNaN(seriesMean)
+        
+        // finalize string to show to user
+        let myLabel = '<strong>' + name + 
+                      '</strong><br>+1 SD: ' + errorMax +
+                      '<br>Mean: ' + seriesMean +
+                      '<br>-1 SD: ' + errorMin +
+                      '<br>' +
+                      '<br>Value: ' + value
+    return(myLabel)   }"
   )
 
-  # echarts
-  ec_plot <- df |>
+  # prep the scatter data
+  ec_data <- df |>
     dplyr::group_by(!!dplyr::sym(group_plot),
                     !!dplyr::sym(indvar_plot)) |>
-    dplyr::mutate(mean = mean(!!dplyr::sym(depvar_plot))) |>
+    dplyr::mutate(
+      mean = mean(!!dplyr::sym(depvar_plot)),
+      error_max = mean + sd(!!dplyr::sym(depvar_plot)),
+      error_min = mean - sd(!!dplyr::sym(depvar_plot)),
+      error_combined = paste0(round(error_max, 1), ",", round(error_min, 1))
+    ) |> 
+    dplyr::select(
+      !!dplyr::sym(group_plot),
+      !!dplyr::sym(indvar_plot),
+      !!dplyr::sym(depvar_plot),
+      jittered_x,
+      mean,
+      error_max, 
+      error_min,
+      error_combined
+    )
+  
+  # prep data for the error bars
+  ec_error_data <- ec_data |> 
+    dplyr::ungroup() |> 
+    dplyr::group_by(!!dplyr::sym(indvar_plot), !!dplyr::sym(group_plot)) |> 
+    dplyr::mutate(jittered_x = mean(jittered_x)) |> 
+    dplyr::distinct(!!dplyr::sym(indvar_plot), !!dplyr::sym(group_plot), jittered_x, error_max, error_min) |> 
+    tidyr::pivot_longer(c(error_max, error_min)) |> 
+    dplyr::group_by(!!dplyr::sym(group_plot), 
+                    !!dplyr::sym(indvar_plot)) |> 
+    dplyr::mutate(mean = mean(value))
+  
+  # make the plot
+  ec_plot <- ec_data |> 
     echarts4r::e_charts(jittered_x) |> 
-    echarts4r::e_scatter_(depvar_plot, 
-                          symbol_size = 9,
-                          itemStyle = list(opacity = 0.6)) |> 
-    echarts4r::e_line(mean,
-                      symbol = 'none',
-                      lineStyle = list(width = 7)) |> 
+    echarts4r::e_scatter_(
+      depvar_plot, 
+      bind = 'error_combined',
+      symbol_size = 9,
+      itemStyle = list(opacity = 0.4)
+    ) |> 
+    echarts4r::e_data(data = ec_error_data) |> 
+    echarts4r::e_line(value, symbol = 'rect') |> 
+    echarts4r::e_line(mean) |> 
     echarts4r::e_aria(
       enabled = TRUE, 
       decal = list(show = TRUE)
     ) |>
     echarts4r::e_theme("walden") |> 
-    echarts4r::e_tooltip(formatter = tooltip) |>
+    echarts4r::e_tooltip(trigger = 'axis', formatter = tooltip) |>
     echarts4r::e_x_axis(
       axisLabel = list(rotate = -20),
       formatter = x_axis_formatter
@@ -448,7 +589,7 @@ plot_explorer_jitter_grouped_ec <- function(df, indvar_plot, depvar_plot, group_
 #' @noRd
 #' @describeIn plot_explorer_bar_ec Longitudinal scatter plot
 plot_explorer_longitudinal_ec <- function(df, indvar_plot, depvar_plot, group_plot, title_curr){
-  
+
   # create new numeric x axis so we can jitter it
   df$jittered_x <- jitter(as.numeric(df[[indvar_plot]]))
   

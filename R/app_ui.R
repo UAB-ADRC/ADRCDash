@@ -18,18 +18,6 @@ app_ui <- function(request) {
     # Leave this function for adding external resources - adds CSS (www) and Images (img)
     golem_add_external_resources(),
     
-    # initial load spinner
-    waiter::waiterShowOnLoad(
-      color = ADRCDashHelper::color_palette$green_dark,
-      html = shiny::tagList(
-        tags$img(src = 'www/logo-watermark.png',
-                 style = 'width: 200px; margin-bottom: 40px',
-                 alt = 'UAB logo'),
-        br(),
-        waiter::spin_ellipsis()
-      )
-    ),
-    
     # TODO: remove when ready
     ADRCDashHelper::add_beta_ribbon(),
     
@@ -38,10 +26,12 @@ app_ui <- function(request) {
       title = "ADRC Data Visualization",
       fullscreen = TRUE,
       dark = NULL,
+      scrollToTop = TRUE,
+      preloader = preloader_spinner(),
       
       header = bs4Dash::dashboardHeader(
         title = tags$a(
-          href = 'https://www.uab.edu/',
+          href = 'https://www.uab.edu/medicine/alzheimers/',
           target = "_blank",
           tags$img(
             src = 'www/logo-ADC.png',
@@ -62,60 +52,62 @@ app_ui <- function(request) {
             
             htmltools::tags$div(
               id = 'landing-page',
-              htmltools::tags$img(src = "img/splash.png"),
-              htmltools::tags$p(
-                "This is the visualization dashboard for UAB's Alzheimer's Disease Research Center. Navigation is on the left-hand side and consists of a data exploration tab and operation dashboard. The exploration tab allows you to select covariates of interest and can be subset by sex and race. The operational dash further details participant workflows and engagement."
+              htmltools::tags$img(src = "www/splash-wide.png"),
+              htmltools::tags$h3(
+                "Visualization Dashboard for the University of Alabama at Birmingham's Alzheimer's Disease Research Center"
+              ),
+              shiny::fluidRow(
+                class = 'page-summary-container',
+                shiny::column(
+                  width = 4,
+                  htmltools::tags$div(
+                    class = 'page-summary',
+                    htmltools::tags$p(
+                      '1'
+                    ),
+                    htmltools::tags$p(
+                      'Chose your desired ',
+                      htmltools::strong('Study'),
+                      'group in the dropdown'
+                    )
+                  )
+                ),
+                shiny::column(
+                  width = 4,
+                  htmltools::tags$div(
+                    class = 'page-summary',
+                    htmltools::tags$p(
+                      '2'
+                    ),
+                    htmltools::tags$p(
+                      'Use ',
+                      htmltools::strong('Data Explorer'),
+                      ' to navigate through data, identify covariates of interest, and segment by gender and ethnicity'
+                    )
+                  )
+                ),
+                shiny::column(
+                  width = 4,
+                  htmltools::tags$div(
+                    class = 'page-summary',
+                    htmltools::tags$p(
+                      '3'
+                    ),
+                    htmltools::tags$p(
+                      'View ',
+                      htmltools::strong('Operational Dash'),
+                      ' to gain detailed insights into participant workflows and engagement'
+                    )
+                  )
+                )
               )
             )
           ),
           
-          # Data Explorer tab - consists of 1 fluidRow for a plotly element, another for a table output
+          # Data Explorer tab 
           bs4Dash::tabItem(
             tabName = "explorer_output",
-            
-            shiny::fluidRow(
-
-              bs4Dash::box(
-                width = 4,
-                title = 'Inputs',
-                
-                selectInput(inputId = "group_curr",
-                            label = "Group of Interest",
-                            choices = group_choices),
-                selectInput(inputId = "indvar_curr",
-                            label = "X-axis Category",
-                            choices = xvar_choices),
-                selectInput(inputId = "depvar_curr",
-                            label = "Y-axis Variable",
-                            choices = yvar_choices),
-                selectInput(inputId = "visit_curr",
-                            label = "Select visit",
-                            choices = visit_choices),  
-                shinyWidgets::prettyCheckbox(
-                  inputId = "expl_study_restrict",
-                  label = "Study Timeframe Only",
-                  icon = icon("check"),
-                  shape = "curve"
-                )
-              ),
-              
-              bs4Dash::box(
-                width = 8,
-                title = "Results",
-                align = "center" , 
-                reactable::reactableOutput(
-                  outputId = "table_curr_explorer"
-                )
-              )
-            ),
-            
-            shiny::fluidRow(
-              bs4Dash::box(
-                width = 12,
-                title = "Covariate Explorer Plot",
-                echarts4r::echarts4rOutput("plot_curr_explorer_echarts", height = "500px")
-              )
-            )
+            mod_data_explorer_ui(id = 'data_explorer')
           ),
           
           # Operational tab 1 - Enrollment status - 1st fluidRow for plot of enrollment flow; 2nd fluidRow for enrollment rates over time
@@ -340,7 +332,8 @@ app_ui <- function(request) {
       sidebar = bs4Dash::dashboardSidebar(
         id = 'sideBarMenu',
         skin = 'dark',
-        width = "275px",
+        width = 275,
+        minified = FALSE,
         
         bs4Dash::sidebarMenu(
           
@@ -434,7 +427,7 @@ app_ui <- function(request) {
       footer = bs4Dash::dashboardFooter(
         fixed = TRUE,
         left = htmltools::a(
-          href = "https://www.uab.edu/",
+          href = "https://www.landeranalytics.com/",
           target = "_blank",
           htmltools::HTML(glue::glue("&copy; UAB {format(lubridate::today(), '%Y')}"))
         )
@@ -454,17 +447,17 @@ app_ui <- function(request) {
 #' @noRd
 golem_add_external_resources <- function(){
   
-  #Resource path for CSS
+  # Resource path for CSS
   add_resource_path(
     'www', app_sys('app/www/')
   )
   
-  #Resource path for Images (e.g. logo in header)
+  # Resource path for Images (e.g. logo in header)
   add_resource_path(
     'img', system.file('app/img/', package = 'ADRCDash')
   )
   
-  #Head tags including favicon
+  # Head tags including favicon
   tags$head(
     favicon(),
     bundle_resources(
@@ -472,11 +465,12 @@ golem_add_external_resources <- function(){
       app_title = 'ADRC Data Visualization'
     ),
     
-    # Add here other external resources
+    ## Add here other external resources
+    
     # Initialize use of waiter
     waiter::use_waiter(),
     
-    # enable shinybrowser
+    # Enable shinybrowser
     shinybrowser::detect()
   )
 }

@@ -12,7 +12,7 @@
 #'
 #' @noRd
 #' @return table, ggplot, or echart depending on argument
-#' @author Chad Murchison, \email{cfmurch@uab.edu}
+#' @author Chad Murchison, Joseph Marlo, \email{support@landeranalytics.com}
 make_plot_enroll_flow <- function(df_orig, start_dt, end_dt, study, date_adjust = FALSE, dict = enroll_flow_dict,
                                   study_start_trunc_field = "screen_dt", use_echarts = FALSE){
   
@@ -20,29 +20,33 @@ make_plot_enroll_flow <- function(df_orig, start_dt, end_dt, study, date_adjust 
   
   #We now filter from the study choice dictionary instead of from a fixed list of arguments
   #Filter on the end date, use the alternate filter function (allows for NA's and uses filter by omission)
-  if(date_adjust == TRUE){
+  #As a new update we're only adjusting start_dt_new instead
+  
+  #Identify the field we're referring to
+  date_field <- study_choices[["date_field"]][which(study_choices[["name"]] == study)]
     
-    #Identify
-    date_field <- study_choices[["date_field"]][which(study_choices[["name"]] == study)]
-    
-    #Right now the entry for date_field from the dictionary is only one, but we keep the for in case it ever becomes a vector
-    for(ii in seq_along(date_field)){
-      #Get the current study-specific date field
-      ref_field <- date_field[ii]
+  #Right now the entry for date_field from the dictionary is only one, but we keep the for in case it ever becomes a vector
+  for(ii in seq_along(date_field)){
+    #Get the current study-specific date field
+    ref_field <- date_field[ii]
       
-      #Identify the max date
+    #Identify the max date based on date_adjust
+    if(isTRUE(date_adjust)){
       start_dt_new = max(as.Date(start_dt), as.Date(study_choices[["start_dt"]][which(study_choices[["name"]] == study)]))
+    } else {
+      start_dt_new = as.Date(start_dt)
+    }
       
-      #Call the filtering function
-      df <- start_end_date_filter_alt(df, date_field = ref_field, start_date = start_dt_new, end_date = end_dt)
-      
-      #Finally, drop anyone missing a value for the current date field whose prescreen is outside the range
-      trunc_id_drop <- which(is.na(df[[ref_field]]) & df[[study_start_trunc_field]] < as.Date(study_choices[["start_dt"]][which(study_choices[["name"]] == study)]))
-      if(length(trunc_id_drop) > 0){
-        df <- df[-trunc_id_drop,]
-      }
+    #Call the filtering function
+    df <- start_end_date_filter_alt(df, date_field = ref_field, start_date = start_dt_new, end_date = end_dt)
+    
+    #Finally, drop anyone missing a value for the current date field whose prescreen is outside the range
+    trunc_id_drop <- which(is.na(df[[ref_field]]) & df[[study_start_trunc_field]] < as.Date(study_choices[["start_dt"]][which(study_choices[["name"]] == study)]))
+    if(length(trunc_id_drop) > 0){
+      df <- df[-trunc_id_drop,]
     }
   }
+  
   
   #Return the NULL plot if needed
   if(nrow(df) == 0){
@@ -170,7 +174,7 @@ make_plot_enroll_flow <- function(df_orig, start_dt, end_dt, study, date_adjust 
 #'
 #' @noRd
 #' @return ggplot, or echart depending on argument
-#' @author Chad Murchison, \email{cfmurch@uab.edu}
+#' @author Chad Murchison, Joseph Marlo, \email{support@landeranalytics.com}
 make_plot_enroll_rate_all <- function(df_orig, use_echarts){
   
   df <- df_orig
@@ -185,7 +189,7 @@ make_plot_enroll_rate_all <- function(df_orig, use_echarts){
   dt_labels_axis <- label_subset(dt_labels, length_curr = 4)
   
   #Build the target enrollment df off the potentially truncated dataset
-  df_tar <- build_target_enroll_df(df)
+  df_tar <- build_target_enroll_df(df, .cols = "count_p30", .labs = "105 per year")
   
   #Some similar relabelling for the y-axis, finding the max between the target and current enrollment, and then building the sequence breaks
   max_count <- max(df[["Current Enrollment"]], df_tar[["Target Enrollment"]], 10)
@@ -195,7 +199,7 @@ make_plot_enroll_rate_all <- function(df_orig, use_echarts){
                                        ifelse(max_count <= 1000, 100, 200))))
   
   if (isTRUE(use_echarts)){
-    df$ideal <- df_tar[df_tar$Target != "100 per year",]$`Target Enrollment`
+    df$ideal <- df_tar[df_tar$Target != "50 per year",]$`Target Enrollment`
     df$date_label <- dt_labels
     ec_plot <- df |> 
       echarts4r::e_charts(x = date_label) |> 
@@ -207,7 +211,7 @@ make_plot_enroll_rate_all <- function(df_orig, use_echarts){
       ) |> 
       echarts4r::e_line(
         ideal,
-        name = 'Target Enrollment (50 per yr)',
+        name = 'Target Enrollment (105 per yr)',
         color = ADRCDashHelper::color_palette$grey_dark, 
         showSymbol = FALSE, 
         symbolSize = 5,
@@ -232,12 +236,12 @@ make_plot_enroll_rate_all <- function(df_orig, use_echarts){
   
   rate_all <- ggplot() +
       geom_line(data = df, aes(x = Date, y = `Current Enrollment`), color = "black", size = 2) + 
-      geom_line(data = df_tar[df_tar$Target != "100 per year",], aes(x = Date, y = `Target Enrollment`, color = Target, linetype = Target), size = 3) + 
+      geom_line(data = df_tar[df_tar$Target != "50 per year",], aes(x = Date, y = `Target Enrollment`, color = Target, linetype = Target), size = 3) + 
     
       #scale_linetype_manual(values=c("dashed", "dotted"), labels=c("50 per year", "100 per year")) + 
       #scale_color_manual(values=c("red", "blue"), labels=c("50 per year", "100 per year")) + 
-      scale_linetype_manual(values=c("dashed"), labels=c("50 per year")) + 
-      scale_color_manual(values=c("red"), labels=c("50 per year")) + 
+      scale_linetype_manual(values=c("dashed"), labels=c("105 per year")) + 
+      scale_color_manual(values=c("red"), labels=c("105 per year")) + 
       
       ggtitle("All Subject Enrollment") + 
       scale_x_continuous(breaks = c(1:length(dt_labels)), labels = dt_labels_axis, name = "Date") + 

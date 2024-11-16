@@ -79,7 +79,7 @@ make_plot_compon <- function(df, dict = data_dict_component){
 #' @param df 
 #' @param dict 
 #' 
-#' @author Chad Murchison, \email{cfmurch@uab.edu}
+#' @author Chad Murchison, Joseph Marlo, \email{support@landeranalytics.com}
 #'
 #' @return html containing the echarts output
 #' @noRd

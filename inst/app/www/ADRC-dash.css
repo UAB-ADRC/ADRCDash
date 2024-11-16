@@ -1,0 +1,32 @@
+/*
+this sheet is for dashboard specific CSS
+the majority of the UAB theme is controlled by write_uab_bs4_theme()
+see utils_misc_fun.R for color palette
+*/
+
+/*** DASHBOARD SPECIFIC ***/
+/* home page */
+#landing-page {
+  max-width: 900px;
+}
+#landing-page img {
+  max-width: 90%;
+  border-radius: 0.5em;
+}
+#landing-page h3 {
+  max-width: 90%;
+  margin-top: 1em;
+}
+#landing-page .page-summary-container {
+  max-width: 90%;
+}
+#landing-page .page-summary p {
+  margin: 0;
+  padding: 0;
+  font-size: 1.2rem;
+}
+#landing-page .page-summary p:first-child {
+  font-size: 4rem;
+  font-weight: 500;
+  color: #144B39;
+}

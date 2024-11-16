@@ -28,7 +28,7 @@ target_enroll <- function(n, dt_list, floor = FALSE){
 
 #Build a dataframe for target enrollment - used in make_plot_enroll_rate_all
 build_target_enroll_df <- function(df, date_col = "Date",
-                                   .cols = c("count_50", "count_100"), .labs = c("50 per year", "100 per year")){
+                                   .cols = c("count_50", "count_105"), .labs = c("50 per year", "105 per year")){
   
   #Build the df using the Date metric from df as a filler
   tar_df <- df[,.SD,.SDcols = c(date_col, .cols)]

@@ -1,3 +1,4 @@
+^tests-load
 ^renv$
 ^renv\.lock$
 ^.*\.Rproj$

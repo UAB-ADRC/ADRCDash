@@ -17,14 +17,21 @@
 #' @noRd
 #' @return table, ggplot, or echart depending on argument
 #' @author Chad Murchison
-make_plot_completion <- function(df, dict_entry,
-                                 start_dt, end_dt, study,
-                                 date_field = "a1_form_dt", date_adjust = TRUE, dict = data_dict_completion,
-                                 return_table = FALSE,
-                                 use_echarts = FALSE){
+make_plot_completion <- function(
+    df, 
+    dict_entry,
+    start_dt, 
+    end_dt, 
+    study,
+    date_field = "a1_form_dt", 
+    date_adjust = TRUE, 
+    dict = data_dict_completion,
+    return_table = FALSE,
+    use_echarts = FALSE
+  ){
   
   #Usual processing by the toggle and the date
-  #This could probalby be cast to a function but this is only the 2nd time its been used in this format
+  #This could probably be cast to a function but this is only the 2nd time its been used in this format
 
   #Select dataframe based on study
   df <- df[df[[study_choices[["var"]][which(study_choices[["name"]] == study)]]] == 1,]
@@ -58,7 +65,7 @@ make_plot_completion <- function(df, dict_entry,
     
     
     if (isTRUE(use_echarts)){
-      
+
       ec_plot <- df_plot |> 
           dplyr::left_join(tibble::tibble(
             Component = dict$label_col,
@@ -73,10 +80,20 @@ make_plot_completion <- function(df, dict_entry,
           decal = list(show = TRUE)
         ) |>
         echarts4r::e_theme("walden") |>
-        echarts4r::e_labels(position = 'inside',
-                            fontWeight = 'bold',
-                            fontSize = 16,
-                            formatter = htmlwidgets::JS("function(params){return(params.name)}")) |> 
+        echarts4r::e_labels(
+          position = 'inside',
+          fontWeight = 'bold',
+          fontSize = 16,
+          formatter = htmlwidgets::JS(
+            # hide label if number is less than 10
+          "function(params) {
+            if(params.name < 10) {
+              return '';
+            } else {
+              return 'N=' + params.name;
+            }
+          }"
+          )) |> 
         echarts4r::e_tooltip(formatter = htmlwidgets::JS("
                                         function(params){
                                         return('<strong>' + params.seriesName + 

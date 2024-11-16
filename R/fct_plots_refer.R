@@ -58,7 +58,7 @@ make_object_refer <- function(
   #Return the NULL plot if needed
   if(length(source_curr) == 0){
 	  # spin_update$hide()
-	  return(return_default_plot())
+	  return(return_default_plot(use_echarts = use_echarts))
   }
   
   #We don't consider anyone with a ".bad" contact_status entry i.e. anyone we've been unable to contact
@@ -152,7 +152,7 @@ make_object_refer <- function(
           )
         )
       )
-      do.call(bs4Dash::tabsetPanel, append(.tabs, list(type="tabs")))
+      do.call(bs4Dash::tabsetPanel, append(.tabs, list(type = "tabs")))
 
     #Otherwise we make the primary plotting object  
     } else{
@@ -189,7 +189,7 @@ make_object_refer <- function(
         #fill_curr <- RColorBrewer::brewer.pal(fill_length, plot_labels_dict[["colorset"]][which(plot_labels_dict[["declined"]]==declined_subj)])
         
         #Another catch to return the NULL plot if needed
-        if(nrow(df) == 0) return(return_default_plot())
+        if(nrow(df) == 0) return(return_default_plot(use_echarts = use_echarts))
         
         ##
         #Plot Processing
@@ -280,7 +280,7 @@ make_object_refer <- function(
 #' @param stack_split_plot 
 #' 
 #' @noRd
-#' @author Chad Murchison, \email{cfmurch@uab.edu}
+#' @author Joseph Marlo, \email{support@landeranalytics.com}
 #'
 #' @return html containing echarts
 make_plot_refer_ec <- function(.data, indvar_plot, group_curr, stack_split_plot){
@@ -331,7 +331,7 @@ make_plot_refer_ec <- function(.data, indvar_plot, group_curr, stack_split_plot)
     # relevel the data so Enrolled is first so its the bottom stack
     # TODO: this may break if the stack_split_plot var changes or values change
     data_cleaned <- .data |> 
-      dplyr::mutate(stack_var = relevel(!!sym(untick(stack_split_plot)), ref = 'Enrolled'))
+      dplyr::mutate(stack_var = stats::relevel(!!sym(untick(stack_split_plot)), ref = 'Enrolled'))
     
     # replace NAs with "Unknown"
     # TODO: review

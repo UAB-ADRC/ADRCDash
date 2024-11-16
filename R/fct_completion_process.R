@@ -75,10 +75,8 @@ completion_process <- function(df, study, start_dt, end_dt, visit_type, enroll_f
   }
 
 
-
-#The function that makes the new binary variable
-
-
+#' Makes the new binary variable
+#' 
 #' @noRd
 #' @describeIn completion_process Creates new binary variable
 #' @description Creates new binary variable 

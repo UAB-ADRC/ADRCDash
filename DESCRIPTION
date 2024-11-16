@@ -1,6 +1,6 @@
 Package: ADRCDash
 Title: ADRC Dashboard
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(
   person('Chad', 'Murchison', email = 'cfmurch@uab.edu', role = c('cre', 'aut')),
   )

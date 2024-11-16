@@ -72,7 +72,7 @@ make_table_compon <- function(df, dict = data_dict_component){
   annot_set <- gsub(dict[["grep_string"]], "", annot_set)
   annot_set <- build_compon_annot(annot_set, build_table = TRUE)
   names(annot_set) <- NULL
-  compon_table <- dplyr::select(compon_table, annot_set)
+  compon_table <- dplyr::select(compon_table, tidyselect::all_of(annot_set))
   
   #Final display processing to drop periods and null out NAs
   compon_table$V1 <- gsub("\\.", " ", compon_table$V1)
